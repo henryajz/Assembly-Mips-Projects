@@ -144,7 +144,7 @@
 
 
 	endProgram:
-		li $v0,4						#Print: Do you want to exit(y/n):
+		li $v0,4						#Print: Do you want to exit
 		la $a0,exitmsg
 		syscall
 	
