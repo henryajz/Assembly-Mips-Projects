@@ -1,4 +1,4 @@
-#Mips calculator lab2 team: Enri Agiazi Emanouil Mpavelas
+#Mips calculator 
 
 .data
 	msg1:.asciiz "\n Please Enter the 1st Number:\n"
