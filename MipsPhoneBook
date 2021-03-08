@@ -1,0 +1,241 @@
+.data
+    	msg1: .asciiz  "Please determine operation, entry (E), inquiry (I) or quit (Q): \n"
+    	msg2:.asciiz  "\n Please enter last name: "
+    	msg3:.asciiz  "\n Please enter first name: " 
+    	msg4:.asciiz  "\n Please enter phone number: "
+    	msg5:.asciiz  "\n Thank you, the new entry is the following:\n" 
+    	msg6:.asciiz  "\n Please enter the entry number you wish to retrieve:\n" 
+    	msg7:.asciiz  "\n There is no such entry in the phonebook\n"
+  	msg8:.asciiz  "The number is:"
+  	
+	maxContacts:.asciiz "\nMemory is Full\n"
+	errormsg:.asciiz "\n Invalid operation or answer.\n"
+	exitmsg:.asciiz "\n Exiting...\n"
+	nextLine: .asciiz "\n"
+	
+	uinput: .space 2
+	output: .space 20
+	.align 2
+	memory: .space 600
+	tmp: .space 60
+	
+.text
+	
+	addi $s2,$zero,0						#Global variable 
+									
+	main:	
+		jal Prompt_User
+		
+		lb $t0,uinput						#load user input to $t0				
+		
+		beq $t0,69,Get_Entry			                #if uinput==E then Get_Entry
+		beq $t0,73,Print_Entry					#if uinput==I then Print_Entry
+		beq $t0,81,EndProgram					#if uinput==Q then End_Program	
+	j main
+
+	Prompt_User:
+		li $v0,4					      	#print msg1
+		la $a0,msg1
+		syscall											
+																																
+		li $v0,8						#Get answer
+		la $a0,uinput
+		li $a1,2
+		syscall	
+                
+	jr $ra
+
+	Get_Entry:	
+		addi $sp,$sp,-4						#Make space into stack
+		sw $s0,0($sp)
+		sw $ra,4($sp)						#Save $ra to stack
+		
+		la $s1,memory						#Load address of memory
+		
+		beq $s2,180,MaxContacts					#Check if memory is full
+		
+		add $s1,$s1,$s2						#px	memoryAd=memoryAd+60 gia 2 epafh
+		
+		jal Get_Last_Name					#Get_Last_Name
+		
+		addi $s1,$s1,20						#Add 20 to write to the other part of memory
+		jal Get_First_Name					#Get_First_Name
+		
+		addi $s1,$s1,20						#Add 20 to write to the other part of memory
+		jal Get_Number						##Get_Number
+		
+		addi $s1,$s1,20						#Add 20 to write next contact
+		
+		lw $s0,0($sp)							
+		lw $ra,4($sp)								
+		addi $sp,$sp,4						
+		
+		addi $s2,$s2,60						#Add 60 to global variable 
+		la $ra,main						#$ra=address of main (return main)
+	jr $ra
+	
+	MaxContacts:
+		li $v0,4						#Print "Memory is Full"
+                la $a0,maxContacts
+                syscall	
+		
+		lw $ra,4($sp)						#Return again $sp				
+		addi $sp,$sp,4
+		la $ra,main
+	jr $ra
+
+	Get_Last_Name:	
+		li $v0,4						#print msg2
+                la $a0,msg2
+                syscall						        	
+		
+		li $v0,8						#Read string
+		move $a0,$s1
+		li $a1, 20						#length of string
+		syscall
+	jr $ra
+	
+	Get_First_Name:
+                li $v0,4						#print msg3
+		la $a0,msg3
+		syscall			
+	
+		li $v0,8						#Read string
+		move $a0,$s1
+		li $a1, 20						#length of string
+		syscall	
+	jr $ra
+	
+	Get_Number:
+                li $v0,4					        #print msg4
+		la $a0,msg4
+		syscall	 
+		
+		li $v0,8						#Read string
+		move $a0,$s1
+		li $a1, 20						#length of string
+		syscall
+	jr $ra
+
+	Print_Entry:	
+		jal Get_Int
+		
+		li $t1,60
+		move $t0,$v0						#save integer to $t0
+		
+		blez $t0,NotFound					#Check if integer is negative
+		
+		#An exoume 3 epafes o $s2=180. An o xrhsths valei 4 o $t2=240
+		#Meta $t2=$s2-$t2	$t2<0 opote einai kalei thn NotFound.
+		
+		mult $t0,$t1												
+		mflo $t2
+		
+		sub $t2,$s2,$t2
+		
+		bltz $t2,NotFound
+		
+		
+		li $v0,1						#Print int
+		move $a0,$t0
+		syscall
+		
+		li $a0, '.'						# print_character
+		li $v0, 11    
+		syscall
+	
+		#px if int=2 then 60*int (int=1)
+		#   if int=1 then 60*int (int=0)
+		#To get the address we want to print
+	
+		addi $t0,$t0,-1						# $t0=$t0-1
+		
+		mult $t0,$t1						#Multiplies the numbers
+		mflo $t2
+		la $a0,memory						#Load Address to memory
+		
+		
+		add $a0,$a0,$t2						#Get contact we want			
+		
+		jal Format						#Print Last Name
+		
+	
+		addi $a0,$a0,20
+		jal Format						#Print First Name
+		
+		
+		addi $a0,$a0,20
+		jal Format						#Print Number
+		
+		
+		la $ra,main
+	jr $ra
+
+	Get_Int:
+                li $v0,4						#Print msg6
+		la $a0,msg6
+		syscall	
+		
+		li $v0,5						#read integer
+		syscall
+	jr $ra
+
+	NotFound:
+		li $v0,4						#Print msg7
+                la $a0,msg7
+                syscall	
+		
+		la $ra,main
+	jr $ra
+		
+	Format:
+		la $t4,output						#load address of uinput in $t1
+		move $t1,$a0						
+		
+		loop:					
+			addi $t0,$zero,0				#initialize $t0 each time we renew word
+			
+			lw $t2,($t1)					#Load a word from uinput
+		j loop2
+		
+		loop2:
+			beq $t0,32,continue				#Continue to read new word
+			
+			srlv $t3,$t2,$t0				#Shift $t2 by $t0 to $t3
+			andi $t3,$t3,0x000000FF				#Mask $t3 to get only one character		
+			
+			beq $t3,10,RemoveNextLine			#If ch=10 remove	
+		j dontChange
+	
+	dontChange:
+		
+		sb $t3,($t4)						#save character to output
+			
+		addi $t0,$t0,8						#Continue reading
+		addi $t4,$t4,1
+	j loop2
+	
+	continue:
+		addi $t1,$t1,4						#Add $t1=$t1+4 to get next word
+	j loop	
+	
+	RemoveNextLine:
+		andi $t3,$t3,0						#make 0
+		addi $t3,$t3,32						#add 32 
+		sb $t3,($t4)						#save space
+	j RuturnAddress
+	
+	RuturnAddress:
+		li $v0,4						#Print output
+		la $a1,output
+		syscall
+	jr $ra
+
+   	EndProgram:
+		li $v0,4						
+		la $a0,exitmsg
+		syscall
+	
+		li $v0,10						#End program
+		syscall
+	jr $ra
