@@ -1,0 +1,378 @@
+.data
+	promptMessage: .asciiz "\nPlease enter a number in the range 0-24, or Q to quit:"
+	errorMessage: .asciiz "\nThis number is outside the allowable range."
+	newLine: .asciiz "\n"
+	exitmsg:.asciiz "\n Exiting...\n"
+	
+	.align 2
+	tmpResult: .ascii "The Fibonacci number F"
+	.align 2
+	output: .space 28
+	int: .word 1
+		
+.text
+	main:  	 
+		jal promptUser								#Call promptUser
+
+		addi $sp,$sp,-12							#Make space for our 3 integers and store them one by one
+        sw $t0,0($sp)								# $t0=F0
+        sw $t1,4($sp)								# $t1=F1
+        sw $t2,8($sp)								# $t2=num
+        	
+        jal Format									#Call format 
+       	
+		li $v0,4									#Print output
+		la $a0,output
+		syscall
+							
+        jal findFibonacci							#Call findFibonacci
+
+    	addi $sp,$sp,12								#Restore stack pointer
+
+	j main
+	
+	#END OF MAIN
+	
+	  #####################
+	  #$t0=address of tmpResuld string
+	  #$t1=address of output string
+	  #$t2= contains the word
+	  #$t3= counter for output strings
+	  #$t4= 
+      
+      Format:
+		la $t0,tmpResult							#Load address of tmpResult to $t0
+		la $t1,output
+		addi $t3,$0,0								#Initialize $t3=0 
+		
+		lw $t2,($t0)					
+		sw $t2,($t1)
+		
+		loop:	
+			beq $t3,20,exitLoop						#Exit loop if counter=20
+			
+			addi $t0,$t0,4							#add 4 to load word 
+			addi $t1,$t1,4							#add 4 to store word
+			addi $t3,$t3,4
+			
+			lw $t2,($t0)							#load word
+			sw $t2,($t1)							#store word
+		j loop
+      
+	  ##########################
+	  #$t0=10
+	  #$t1=address to load next
+	  #$t2=
+	  #$t3=
+	  #$t4=temporary to load
+	  #$t5,$t6 temporary 
+	  
+      exitLoop:
+      	addi $t1,$t1,2
+  		lw $t4,8($sp)								#load num to $t4
+  		li $t0,10									#$t0=10
+  		addi $t4,$t4,1						
+  		
+  		sub $t0,$t0,$t4								#10-$t4
+  		bgtz $t0,oneDigitInt						#if 10-$t4>0 then oneDIgitInt
+  		
+      j twoDigitsiInt
+      
+	  
+      oneDigitInt:
+      	addi $t4,$t4,48								#Store 1 to output string
+      	sb $t4,($t1)
+      	
+      	addi $t1,$t1,1								#Store space in output
+      	li $t4,32
+      	sb $t4,($t1)
+      	
+      	addi $t1,$t1,1								#Store i in output
+      	li $t4,105
+      	sb $t4,($t1)
+      	
+      	addi $t1,$t1,1								#Store s in output
+      	li $t4,115
+      	sb $t4,($t1)
+				
+		addi $t1,$t1,1								#Store space in output
+      	li $t4,32
+      	sb $t4,($t1)
+      	
+		addi $t1,$t1,1
+		li $t4,0
+		sb $t4,($t1)
+		
+      	j exitFormat
+  		
+	twoDigitsiInt:
+		li $t0,20									#$t0=20
+		sub $t0,$t0,$t4					
+		
+		bgtz $t0,lessThan20 						#if 20-num>0 then lessThan20
+		
+	j greaterThan19
+	
+	
+	
+	lessThan20:
+		li $t0,10
+		div $t5,$t4,$t0								#Divides the numbers
+		mul $t5,$t5,$t0								#Multiplies the numberss		
+		sub $t6,$t4,$t5
+			
+	
+		li $t4,49									#Store 1 to output string
+      	sb $t4,($t1)
+      	
+     
+      	addi $t1,$t1,1								#Store div of number to output string
+      	addi $t6,$t6,48
+      	sb $t6,($t1)
+      	
+      	
+		addi $t1,$t1,1								#Store space in output
+      	li $t4,32
+      	sb $t4,($t1)
+      	
+      	addi $t1,$t1,1								#Store i in output
+      	li $t4,105
+      	sb $t4,($t1)
+      	
+      	addi $t1,$t1,1								#Store s in output
+      	li $t4,115
+      	sb $t4,($t1)
+      		
+		addi $t1,$t1,1								#Store space in output
+      	li $t4,32
+      	sb $t4,($t1)
+		
+		addi $t1,$t1,1
+		li $t4,0
+		sb $t4,($t1)
+		
+		
+		j exitFormat																						
+		
+																
+	greaterThan19:
+		li $t0,10
+		div $t5,$t4,$t0								#Divides the numbers
+		mul $t5,$t5,$t0								#Multiplies the numberss		
+		sub $t6,$t4,$t5	
+	
+		li $t4,50									#Store 2 to output string
+      	sb $t4,($t1)
+      	
+      	addi $t1,$t1,1								#Store div of number to output string
+      	addi $t6,$t6,48
+      	sb $t6,($t1)
+      	
+      	addi $t1,$t1,1								#Store space in output
+      	li $t4,32
+      	sb $t4,($t1)
+      	
+      	addi $t1,$t1,1								#Store i in output
+      	li $t4,105
+      	sb $t4,($t1)
+      	
+      	addi $t1,$t1,1								#Store s in output
+      	li $t4,115
+      	sb $t4,($t1)
+      		
+		addi $t1,$t1,1								#Store space in output
+      	li $t4,32
+      	sb $t4,($t1)
+		
+		addi $t1,$t1,1							#save null character in the end
+		li $t4,0
+		sb $t4,($t1)
+		
+      	
+		j exitFormat
+	
+	
+	exitFormat:										#Return address of function
+		jr $ra	
+      
+     	
+    #########################
+    #$t2 is for user input								
+	#$t0 is for F0										
+	#$t1 is for F1										
+    #$t4=24												
+	#########################
+	  
+	  
+	promptUser:		
+      	li $v0,4									#Print message
+      	la $a0,promptMessage
+      	syscall
+      	      	
+      	li $v0,5             						# system call code for reading integer = 5 (read integer) 
+      	syscall 
+      	 
+      	move $t2,$v0								#save int to $t2
+				
+       	beq $t2,-1,exit								#if int==-1 then call exit
+   		
+		li $t4,24									#$t4=24
+       	sub $t4,$t4,$t2								#$t4=$t4-$t2
+			
+       	bltz $t4,errorMsg							#if $t4<0 then call errorMsg (diladi o $t2>24 einai megaliteros tou mhden)
+       	
+       	bltz $t2,errorMsg							#if $t2<0 then call errorMsg (arnitikos)
+       	
+       	sw $t2,16($sp)								#store $t2 unchanged to stack
+       	
+       	addi $t2,$t2,-1								#Decrement $t2
+        addi $t0,$zero,0							#F0=0					
+	  	addi $t1,$t0,1								#F1=1
+		
+													#Save n,F0,F1 to stack
+        sw $t0,0($sp)				
+        sw $t1,4($sp)
+        sw $t2,8($sp)
+        
+      jr $ra
+          
+  
+    errorMsg:
+      	li $v0,4									#Print errorMessage
+      	la $a0,errorMessage
+      	syscall
+      j main	
+      
+	  
+	  ##########################################
+	  #$t2 is for user input					
+	  #$t0 is for F(n-1)						
+	  #$t1 is for F(n)							
+      #$t3 is for								
+	  #													
+
+	  
+	  
+    findFibonacci:
+		lw $t0,0($sp)								#load F(n-1)
+
+		lw $t1,4($sp)								#load F(n)
+		
+		lw $t2,8($sp)								#load n
+
+		addi $sp,$sp,-16							#Allocate space from stack
+		addi $t2,$t2,-1
+		
+		beq $t2,-2,returnZero						#if n==0 returnZero
+		beq $t2,-1,returnOne						#if n==1 returnOne
+		beq $t2,1,returnFinal						#else when finished returnFinal
+		
+		########################################################################
+		#paradeigmagia 															
+		#		n=3																
+		#		$t0=0		F(0)												
+		#		$t1=1		F(1)												
+		#		______+																
+		#		F(2)$t3=$t0+$t1		n=2  						n=1 loop stops	
+		#						0 $t1=1 F(1)	-> $t0=1  -> 	final=$t1+$t3=2		
+		#						4 $t3=1 F(2)    -> $t1=1  ->	F(3)=$t1+$t3	
+
+		
+		add $t3,$t0,$t1								
+		
+		sw $t2,8($sp)								#Store all values before saving again
+		sw $ra,12($sp)  							#to stack
+		sw $t1,0($sp)								#F(n), F(n-1), $ra,n 
+		sw $t3,4($sp)								#before next recursive call
+		
+		############ Call fibonacci############
+		jal findFibonacci							#call findFibonacci
+		############ Call fibonacci############
+		
+		
+		lw $ra,12($sp)								#Restore return address from stack
+		addi $sp,$sp,16								#shrink stack
+		
+		
+	jr $ra
+		
+	
+	returnZero:
+													#make both $t0 and $t1 zero 			
+		lw $t1,4($sp)
+		andi $t1,$t1,0
+		add $t3,$t0,$t1
+		add $t4,$t3,$t1
+		
+		
+		addi $v0,$0,0								#Print integer
+		addi $v0,$v0,1
+		addi $a0,$t4,0
+		syscall
+			
+		sw $t2,8($sp)								#Store values before shrinking the stack
+		sw $ra,12($sp)  	
+		sw $t0,0($sp)
+		sw $t1,4($sp)
+		
+		sw $t1,4($sp)
+		
+		lw $ra,12($sp)
+		lw $t0,0($sp)
+		lw $t1,4($sp)
+		lw $t2,8($sp)
+		addi $sp,$sp,16
+	jr $ra
+	
+	
+	returnOne:	
+		add $t3,$t0,$t1
+		
+		addi $v0,$0,0								#Print integer
+		addi $v0,$v0,1
+		addi $a0,$t1,0
+		syscall
+			
+		sw $t2,8($sp)								#Store values before shrinking the stack	
+		sw $ra,12($sp)  			
+		sw $t0,0($sp)
+		sw $t1,4($sp)
+		
+		sw $t1,4($sp)
+		
+		lw $ra,12($sp)
+		lw $t0,0($sp)
+		lw $t1,4($sp)
+		lw $t2,8($sp)
+		addi $sp,$sp,16
+	jr $ra	
+	
+	returnFinal:
+		add $t3,$t0,$t1
+		add $t4,$t3,$t1								#Add last F(n-1)+(n)
+		
+		addi $v0,$0,0								#Print integer
+		addi $v0,$v0,1
+		addi $a0,$t4,0
+		syscall
+						
+		sw $t2,8($sp)								#Store values before shrinking the stack
+		sw $ra,12($sp)  	
+		sw $t1,0($sp)
+		sw $t3,4($sp)
+
+		lw $ra,12($sp)
+		lw $t0,0($sp)
+		lw $t1,4($sp)
+		lw $t2,8($sp)
+		addi $sp,$sp,16
+
+	jr $ra      
+		
+	exit:
+		li $v0,4						
+		la $a0,exitmsg
+		syscall
+			
+      	li $v0, 10           						# calling "exit" syscall 
+     	syscall
